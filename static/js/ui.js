@@ -148,7 +148,7 @@ function crearBreadcrumbItem(nombre, ruta) {
 // Crear elemento de Carpeta
 function crearElementoCarpeta(carpeta) {
     const div = document.createElement('div');
-    div.className = 'column is-one-quarter has-text-centered carpeta';
+    div.className = 'column is-one-third has-text-centered carpeta';
     div.dataset.ruta = carpeta.path;
 
     div.innerHTML = `
@@ -162,7 +162,7 @@ function crearElementoCarpeta(carpeta) {
 // Crear elemento de Archivo
 function crearElementoArchivo(archivo) {
     const div = document.createElement('div');
-    div.className = 'column is-one-quarter has-text-centered archivo';
+    div.className = 'column is-one-third-desktop is-two-fifths-mobile has-text-centered archivo';
 
     div.innerHTML = `
         <i class="fas fa-file fa-3x has-text-secondary mb-2"></i>
