@@ -14,8 +14,13 @@ export function inicializarUI() {
         const target = event.target;
 
         if (target.classList.contains('boton-ver')) {
-            const ruta = target.dataset.ruta;
-            await mostrarArchivo(ruta);
+          const ruta = target.dataset.ruta;
+          const archivosEnCarpetas = Array.from(contenedor.querySelectorAll('.archivo'))
+            .map((archivo) => ({
+               path: archivo.querySelector('.boton-ver').dataset.ruta,
+               name: archivo.querySelector('.truncate-text').textContent,
+            }));
+          await mostrarArchivo(ruta, archivosEnCarpetas);
         }
 
         if (target.classList.contains('boton-eliminar')) {

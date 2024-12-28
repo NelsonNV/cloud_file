@@ -101,9 +101,9 @@ export async function mostrarArchivo(ruta, archivos) {
                 </div>
             </section>
             <footer class="custom-modal-footer">
-                <button class="custom-modal-button" id="btn-prev">Anterior</button>
-                <button class="custom-modal-button" id="btn-next">Siguiente</button>
-                <button class="custom-modal-button is-danger" aria-label="close">Cerrar</button>
+                <button class="custom-modal-button secondary" id="btn-prev">Anterior</button>
+                <button class="custom-modal-button secondary " id="btn-next">Siguiente</button>
+                <button class="custom-modal-button" aria-label="close">Cerrar</button>
             </footer>
         </div>
     `;
@@ -137,9 +137,17 @@ async function cambiarArchivo(direccion, modal) {
         return;
     }
 
-    const nuevoArchivo = archivosEnCarpeta[archivoActualIndex];
-    const nuevoContenido = await obtenerVistaContenido(nuevoArchivo.path);
+    const archivo = archivosEnCarpeta[archivoActualIndex];
 
+    // Obtener el nuevo contenido
+    const contenido = await obtenerVistaContenido(archivo.path);
+
+    // Actualizar el contenido del modal
     const modalContent = modal.querySelector('.custom-modal-content');
-    modalContent.innerHTML = nuevoContenido;
+    modalContent.innerHTML = contenido;
+
+    // Actualizar el título del modal (si aplica)
+    const modalTitle = modal.querySelector('.custom-modal-title');
+    modalTitle.textContent = archivo.name || "Visor de archivo";
 }
+

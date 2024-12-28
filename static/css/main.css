@@ -98,14 +98,25 @@
 
 .custom-modal-button {
     padding: 0.5rem 1rem;
-    background-color: #ff3860;
-    color: #fff;
+    background-color: var(--modal-button-bg, #ff3860);
+    color: var(--modal-button-color, #fff);
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
+    transition: background-color 0.3s ease;
 }
 
 .custom-modal-button:hover {
-    background-color: #ff1e4d;
+    background-color: var(--modal-button-bg-hover, #ff1e4d);
+}
+
+
+.custom-modal-button.secondary {
+    background-color: var(--modal-button-secondary-bg, #00d1b2);
+    color: var(--modal-button-secondary-color, #fff);
+}
+
+.custom-modal-button.secondary:hover {
+    background-color: var(--modal-button-secondary-bg-hover, #00b89c);
 }
