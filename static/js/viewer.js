@@ -1,6 +1,6 @@
 const tipoArchivoVista = {
     image: {
-        extensiones: ['png', 'jpg', 'jpeg', 'gif', 'bmp'],
+        extensiones: ['png', 'jpg', 'jpeg', 'gif', 'bmp','jfif'],
         render: (ruta) => `<img src="${ruta}" alt="Imagen" class="image">`,
     },
     video: {

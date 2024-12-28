@@ -144,7 +144,7 @@ function construirJerarquia(contenido) {
 function getIconoSegunExtension(nombreArchivo) {
     const extension = nombreArchivo.split('.').pop().toLowerCase();
     const iconos = {
-        'fa-file-image': ['png', 'jpg', 'jpeg', 'gif', 'bmp'],
+        'fa-file-image': ['png', 'jpg', 'jpeg', 'gif', 'bmp','jfif'],
         'fa-file-archive': ['zip', 'rar', '7z', 'tar', 'gz'],
         'fa-file-video': ['mp4', 'webm', 'ogg', 'mkv'],
         'fa-file-audio': ['mp3', 'wav', 'ogg'],
