@@ -26,14 +26,17 @@ export function inicializarUI() {
 
         if (target.classList.contains('boton-renombrar')) {
             const ruta = target.dataset.ruta;
-            const nuevoNombre = prompt('Introduce el nuevo nombre:');
-            if (nuevoNombre && await renombrarElemento(ruta, nuevoNombre)) renderContenido();
+            const nombreActual = target.dataset.nombre;
+            const nuevoNombre = prompt('Introduce el nuevo nombre:', nombreActual);
+          if (nuevoNombre && nuevoNombre !== nombreActual) {
+             if (await renombrarElemento(ruta, nuevoNombre)); renderContenido();
+          }
         }
 
         if (target.classList.contains('boton-mover')) {
             const ruta = target.dataset.ruta;
             const nuevaRuta = prompt('Introduce la nueva ruta de destino:');
-            if (nuevaRuta && await moverElemento(ruta, nuevaRuta)) renderContenido();
+            if (nuevaRuta && await moverElemento(ruta, nuevaRuta)); renderContenido();
         }
 
         if (target.classList.contains('carpeta-expandible')) {
@@ -209,7 +212,7 @@ function renderizarArbol(arbol, contenedor) {
                     <div class="botones">
                         <button class="button is-link is-small boton-ver" data-ruta="${item.path}">Ver</button>
                         <button class="button is-danger is-small boton-eliminar" data-nombre="${item.name}" data-ruta="${item.path}">Eliminar</button>
-                        <button class="button is-warning is-small boton-renombrar" data-ruta="${item.path}">Renombrar</button>
+                        <button class="button is-warning is-small boton-renombrar" data-ruta="${item.path}" data-nombre="${item.name}">Renombrar</button>
                         <button class="button is-primary is-small boton-mover" data-ruta="${item.path}">Mover</button>
                     </div>
                 </div>

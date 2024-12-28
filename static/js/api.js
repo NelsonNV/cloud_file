@@ -39,8 +39,7 @@ export async function eliminarElemento(nombre, ruta) {
 
 
 // Función para renombrar un elemento
-export async function renombrarElemento(ruta) {
-    const nuevoNombre = prompt('Introduce el nuevo nombre:', '');
+export async function renombrarElemento(ruta, nuevoNombre) {
     if (!nuevoNombre) return false;
 
     try {
@@ -52,7 +51,6 @@ export async function renombrarElemento(ruta) {
         const data = await response.json();
         if (response.ok) {
             alert(data.mensaje);
-            renderContenido();
             return true;
         } else {
             alert(data.error);
@@ -76,7 +74,6 @@ export async function moverElemento(ruta, destino) {
 
         if (response.ok) {
             alert(data.mensaje);
-            renderContenido();
             return true;
         } else {
             alert(data.error);
