@@ -1,0 +1,55 @@
+.tree {
+    list-style-type: none;
+    padding-left: 1rem;
+    margin: 0;
+}
+
+.tree li {
+    margin: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.tree .carpeta-expandible {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    transition: background-color 0.2s ease; /* Efecto hover */
+}
+
+.tree .carpeta-expandible:hover {
+    background-color: #f5f5f5; /* Color de fondo al pasar el ratón */
+}
+
+.tree .archivo {
+    display: flex;
+    flex-direction: column;
+}
+
+.tree .archivo .botones {
+    margin-top: 0.5rem; /* Espacio entre texto y botones */
+    display: flex;
+    gap: 0.5rem; /* Espacio entre botones */
+}
+
+.tree .icono {
+    margin-right: 0.5rem; /* Espaciado entre el ícono y el texto */
+    transition: transform 0.3s ease; /* Suavizar iconos */
+}
+
+ul.tree ul {
+    transition: max-height 0.3s ease, opacity 0.3s ease; /* Suavizar transiciones */
+}
+
+/* Responsivo: Ajustar en pantallas pequeñas */
+@media screen and (max-width: 768px) {
+    .tree .archivo {
+        align-items: flex-start; /* Alinear contenido a la izquierda */
+    }
+
+    .tree .archivo .botones {
+        width: 100%; /* Ocupa todo el ancho disponible */
+        justify-content: flex-start; /* Botones alineados a la izquierda */
+    }
+}
