@@ -1,20 +1,20 @@
 const tipoArchivoVista = {
     image: {
         extensiones: ['png', 'jpg', 'jpeg', 'gif', 'bmp'],
-        render: (ruta) => `<img src="${ruta}" alt="Imagen" class="image is-fullwidth">`,
+        render: (ruta) => `<img src="${ruta}" alt="Imagen" class="image">`,
     },
     video: {
-        extensiones: ['mp4', 'webm', 'ogg',"mkv"],
-        render: (ruta) => `<video src="${ruta}" controls class="video is-fullwidth"></video>`,
+        extensiones: ['mp4', 'webm', 'ogg', 'mkv'],
+        render: (ruta) => `<video src="${ruta}" controls class="video"></video>`,
     },
     audio: {
         extensiones: ['mp3', 'wav', 'ogg'],
-        render: (ruta) => `<audio src="${ruta}" controls class="audio is-fullwidth"></audio>`,
+        render: (ruta) => `<audio src="${ruta}" controls class="audio"></audio>`,
     },
     pdf: {
         extensiones: ['pdf'],
         render: (ruta) => `
-            <iframe src="${ruta}" class="iframe" style="width: 100%; height: 600px;" frameborder="0"></iframe>
+            <iframe src="${ruta}" class="iframe" style="width: 100%; height: 100%;" frameborder="0"></iframe>
         `,
     },
     text: {
@@ -39,7 +39,7 @@ const tipoArchivoVista = {
         extensiones: ['ppt', 'pptx'],
         render: (ruta) => `
             <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(ruta)}"
-                style="width: 100%; height: 600px;" frameborder="0"></iframe>
+                style="width: 100%; height: 100%;" frameborder="0"></iframe>
         `,
     },
     default: {
@@ -74,7 +74,15 @@ export async function obtenerVistaContenido(ruta) {
     return config.render(ruta);
 }
 
-export async function mostrarArchivo(ruta) {
+// Variables globales para navegación
+let archivosEnCarpeta = [];
+let archivoActualIndex = 0;
+
+export async function mostrarArchivo(ruta, archivos) {
+    // Actualizar lista de archivos y el índice actual
+    archivosEnCarpeta = archivos || [];
+    archivoActualIndex = archivosEnCarpeta.findIndex((archivo) => archivo.path === ruta);
+
     const modal = document.createElement('div');
     modal.className = 'custom-modal';
 
@@ -93,19 +101,45 @@ export async function mostrarArchivo(ruta) {
                 </div>
             </section>
             <footer class="custom-modal-footer">
-                <button class="custom-modal-button" aria-label="close">Cerrar</button>
+                <button class="custom-modal-button" id="btn-prev">Anterior</button>
+                <button class="custom-modal-button" id="btn-next">Siguiente</button>
+                <button class="custom-modal-button is-danger" aria-label="close">Cerrar</button>
             </footer>
         </div>
     `;
 
     document.body.appendChild(modal);
 
+    // Cerrar modal al hacer clic en el fondo o en los botones de cerrar
     const cerrarBotones = modal.querySelectorAll('[aria-label="close"]');
     cerrarBotones.forEach((boton) =>
         boton.addEventListener('click', () => cerrarModal(modal))
     );
+
     modal.querySelector('.custom-modal-background').addEventListener('click', () => cerrarModal(modal));
+
+    // Botones de navegación
+    modal.querySelector('#btn-prev').addEventListener('click', () => cambiarArchivo(-1, modal));
+    modal.querySelector('#btn-next').addEventListener('click', () => cambiarArchivo(1, modal));
 }
+
 function cerrarModal(modal) {
     document.body.removeChild(modal);
+}
+
+// Cambiar entre archivos (siguiente o anterior)
+async function cambiarArchivo(direccion, modal) {
+    archivoActualIndex += direccion;
+
+    // Validar límites
+    if (archivoActualIndex < 0 || archivoActualIndex >= archivosEnCarpeta.length) {
+        archivoActualIndex -= direccion; // Revertir si se excede
+        return;
+    }
+
+    const nuevoArchivo = archivosEnCarpeta[archivoActualIndex];
+    const nuevoContenido = await obtenerVistaContenido(nuevoArchivo.path);
+
+    const modalContent = modal.querySelector('.custom-modal-content');
+    modalContent.innerHTML = nuevoContenido;
 }

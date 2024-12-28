@@ -145,13 +145,11 @@ function renderizarArbol(arbol, contenedor) {
 
         if (item.type === 'folder') {
             const carpetaDiv = document.createElement('div');
-            carpetaDiv.className = 'carpeta-expandible columns is-vcentered is-mobile';
+            carpetaDiv.className = 'carpeta-expandible';
             carpetaDiv.innerHTML = `
-                <div class="column is-narrow">
+                <div class="carpeta-header">
                     <i class="fas fa-folder icono"></i>
-                </div>
-                <div class="column">
-                    <span>${item.name}</span>
+                    <span class="truncate-text">${item.name}</span>
                 </div>
             `;
 
@@ -178,16 +176,16 @@ function renderizarArbol(arbol, contenedor) {
             li.appendChild(subLista);
         } else if (item.type === 'file') {
             li.innerHTML = `
-                <div class="columns is-multiline is-mobile">
-                    <div class="column is-12">
+                <div class="archivo">
+                    <div class="archivo-header">
                         <i class="fas fa-file icono"></i>
-                        <span>${item.name}</span>
+                        <span class="truncate-text">${item.name}</span>
                     </div>
-                    <div class="column is-12 buttons are-small">
-                        <button class="button is-link boton-ver" data-ruta="${item.path}">Ver</button>
-                        <button class="button is-danger boton-eliminar" data-nombre="${item.name}" data-ruta="${item.path}">Eliminar</button>
-                        <button class="button is-warning boton-renombrar" data-ruta="${item.path}">Renombrar</button>
-                        <button class="button is-primary boton-mover" data-ruta="${item.path}">Mover</button>
+                    <div class="botones">
+                        <button class="button is-link is-small boton-ver" data-ruta="${item.path}">Ver</button>
+                        <button class="button is-danger is-small boton-eliminar" data-nombre="${item.name}" data-ruta="${item.path}">Eliminar</button>
+                        <button class="button is-warning is-small boton-renombrar" data-ruta="${item.path}">Renombrar</button>
+                        <button class="button is-primary is-small boton-mover" data-ruta="${item.path}">Mover</button>
                     </div>
                 </div>
             `;
@@ -198,6 +196,7 @@ function renderizarArbol(arbol, contenedor) {
 
     contenedor.appendChild(ul);
 }
+
 function crearBreadcrumbItem(nombre, ruta) {
     const li = document.createElement('li');
     li.className = 'breadcrumb-item';
