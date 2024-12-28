@@ -3,23 +3,19 @@ import { mostrarArchivo } from './viewer.js';
 
 let rutaActual = '';
 
-// Inicializar la UI
 export function inicializarUI() {
     const contenedor = document.getElementById('contenedor');
     const breadcrumb = document.getElementById('breadcrumb');
     const btnSubirArchivo = document.getElementById('btnSubirArchivo');
-    const formSubirArchivo = document.getElementById('formSubirArchivo');
-    const archivoInput = document.getElementById('archivoInput');
-    const btnSubir = document.getElementById('btnSubir');
     const btnCrearCarpeta = document.getElementById('btnCrearCarpeta');
 
-    // Delegar eventos dentro del contenedor principal
+    // Delegar eventos en el contenedor principal
     contenedor.addEventListener('click', async (event) => {
         const target = event.target;
 
         if (target.classList.contains('boton-ver')) {
             const ruta = target.dataset.ruta;
-            mostrarArchivo(ruta);
+            await mostrarArchivo(ruta);
         }
 
         if (target.classList.contains('boton-eliminar')) {
@@ -31,22 +27,26 @@ export function inicializarUI() {
 
         if (target.classList.contains('boton-renombrar')) {
             const ruta = target.dataset.ruta;
-            const renombrado = await renombrarElemento(ruta);
-            if (renombrado) renderContenido();
+            const nuevoNombre = prompt('Introduce el nuevo nombre:');
+            if (nuevoNombre && await renombrarElemento(ruta, nuevoNombre)) renderContenido();
         }
 
         if (target.classList.contains('boton-mover')) {
             const ruta = target.dataset.ruta;
-            const destino = prompt('Introduce la ruta destino:', '');
-            if (destino) {
-                const movido = await moverElemento(ruta, destino);
-                if (movido) renderContenido();
-            }
+            const nuevaRuta = prompt('Introduce la nueva ruta de destino:');
+            if (nuevaRuta && await moverElemento(ruta, nuevaRuta)) renderContenido();
         }
 
-        if (target.classList.contains('carpeta')) {
-            rutaActual = target.dataset.ruta;
-            renderContenido();
+        if (target.classList.contains('carpeta-expandible')) {
+            const subLista = target.nextElementSibling;
+            const isCollapsed = subLista.style.maxHeight === '0px';
+            if (isCollapsed) {
+                subLista.style.maxHeight = `${subLista.scrollHeight}px`;
+                target.querySelector('.icono').classList.replace('fa-folder', 'fa-folder-open');
+            } else {
+                subLista.style.maxHeight = '0';
+                target.querySelector('.icono').classList.replace('fa-folder-open', 'fa-folder');
+            }
         }
     });
 
@@ -58,28 +58,6 @@ export function inicializarUI() {
         }
     });
 
-    // Mostrar/ocultar formulario de subir archivo
-    btnSubirArchivo.addEventListener('click', () => {
-        formSubirArchivo.style.display =
-            formSubirArchivo.style.display === 'none' ? 'block' : 'none';
-    });
-
-    // Subir archivo
-    btnSubir.addEventListener('click', async () => {
-        const archivo = archivoInput.files[0];
-        if (!archivo) {
-            alert('Por favor, selecciona un archivo.');
-            return;
-        }
-        const resultado = await subirArchivo(archivo, rutaActual);
-        if (resultado && resultado.mensaje) {
-            alert(resultado.mensaje);
-            renderContenido();
-        } else {
-            alert('Error al subir el archivo.');
-        }
-    });
-
     // Crear carpeta
     btnCrearCarpeta.addEventListener('click', async () => {
         const nombreCarpeta = prompt('Introduce el nombre de la nueva carpeta:');
@@ -87,21 +65,32 @@ export function inicializarUI() {
             alert('El nombre de la carpeta no puede estar vacío.');
             return;
         }
+        if (await crearCarpeta(nombreCarpeta, rutaActual)) renderContenido();
+    });
 
-        const resultado = await crearCarpeta(nombreCarpeta, rutaActual);
-        if (resultado && resultado.mensaje) {
-            alert(resultado.mensaje);
-            renderContenido();
-        } else {
-            alert('Error al crear la carpeta.');
-        }
+    // Subir archivo
+    btnSubirArchivo.addEventListener('click', async () => {
+        const archivoInput = document.createElement('input');
+        archivoInput.type = 'file';
+        archivoInput.style.display = 'none';
+
+        archivoInput.addEventListener('change', async () => {
+            const archivo = archivoInput.files[0];
+            if (archivo) {
+                if (await subirArchivo(archivo, rutaActual)) renderContenido();
+            }
+        });
+
+        document.body.appendChild(archivoInput);
+        archivoInput.click();
+        document.body.removeChild(archivoInput);
     });
 }
 
 export async function renderContenido() {
     const contenedor = document.getElementById('contenedor');
     const breadcrumb = document.getElementById('breadcrumb');
-    const archivos = await listarArchivos(rutaActual);
+    const datos = await listarArchivos(rutaActual);
 
     // Limpiar contenido previo
     contenedor.innerHTML = '';
@@ -116,27 +105,105 @@ export async function renderContenido() {
         breadcrumb.appendChild(crearBreadcrumbItem(parte, rutaParcial));
     });
 
-    // Mostrar carpetas primero
-    archivos
-        .filter((item) => item.type === 'folder')
-        .forEach((carpeta) => {
-            contenedor.appendChild(crearElementoCarpeta(carpeta));
-        });
-
-    // Mostrar archivos
-    archivos
-        .filter((item) => item.type === 'file')
-        .forEach((archivo) => {
-            contenedor.appendChild(crearElementoArchivo(archivo));
-        });
+    // Renderizar estructura jerárquica
+    const arbol = construirJerarquia(datos);
+    renderizarArbol(arbol, contenedor);
 }
 
-// Crear elemento de Breadcrumb
+function construirJerarquia(contenido) {
+    const arbol = {};
+
+    contenido.forEach((item) => {
+        const rutaRelativa = item.path.replace(/^media\//, ''); // Eliminar prefijo 'media/'
+        const partes = rutaRelativa.split('/');
+
+        let nodoActual = arbol;
+
+        partes.forEach((parte, index) => {
+            const esUltimo = index === partes.length - 1;
+
+            if (!nodoActual[parte]) {
+                nodoActual[parte] = esUltimo ? { ...item } : {};
+            }
+
+            nodoActual = nodoActual[parte];
+        });
+    });
+
+    return arbol;
+}
+
+
+function renderizarArbol(arbol, contenedor) {
+    const ul = document.createElement('ul');
+    ul.classList.add('tree');
+
+    Object.keys(arbol).forEach((clave) => {
+        const item = arbol[clave];
+        const li = document.createElement('li');
+        li.classList.add('mb-3'); // Añadir margen entre elementos
+
+        if (item.type === 'folder') {
+            const carpetaDiv = document.createElement('div');
+            carpetaDiv.className = 'carpeta-expandible columns is-vcentered is-mobile';
+            carpetaDiv.innerHTML = `
+                <div class="column is-narrow">
+                    <i class="fas fa-folder icono"></i>
+                </div>
+                <div class="column">
+                    <span>${item.name}</span>
+                </div>
+            `;
+
+            const subLista = document.createElement('ul');
+            subLista.style.maxHeight = '0'; // Inicia colapsada
+            subLista.style.overflow = 'hidden';
+            subLista.style.transition = 'max-height 0.3s ease';
+
+            renderizarArbol(item, subLista);
+
+            carpetaDiv.addEventListener('click', (event) => {
+                event.stopPropagation(); // Evitar que el evento burbujee a niveles superiores
+                const isCollapsed = subLista.style.maxHeight === '0px';
+                if (isCollapsed) {
+                    subLista.style.maxHeight = `${subLista.scrollHeight}px`;
+                    carpetaDiv.querySelector('.icono').classList.replace('fa-folder', 'fa-folder-open');
+                } else {
+                    subLista.style.maxHeight = '0';
+                    carpetaDiv.querySelector('.icono').classList.replace('fa-folder-open', 'fa-folder');
+                }
+            });
+
+            li.appendChild(carpetaDiv);
+            li.appendChild(subLista);
+        } else if (item.type === 'file') {
+            li.innerHTML = `
+                <div class="columns is-multiline is-mobile">
+                    <div class="column is-12">
+                        <i class="fas fa-file icono"></i>
+                        <span>${item.name}</span>
+                    </div>
+                    <div class="column is-12 buttons are-small">
+                        <button class="button is-link boton-ver" data-ruta="${item.path}">Ver</button>
+                        <button class="button is-danger boton-eliminar" data-nombre="${item.name}" data-ruta="${item.path}">Eliminar</button>
+                        <button class="button is-warning boton-renombrar" data-ruta="${item.path}">Renombrar</button>
+                        <button class="button is-primary boton-mover" data-ruta="${item.path}">Mover</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        ul.appendChild(li);
+    });
+
+    contenedor.appendChild(ul);
+}
 function crearBreadcrumbItem(nombre, ruta) {
     const li = document.createElement('li');
     li.className = 'breadcrumb-item';
 
     const link = document.createElement('a');
+    link.className = 'is-link';
     link.textContent = nombre;
     link.dataset.ruta = ruta;
     link.href = '#';
@@ -145,33 +212,3 @@ function crearBreadcrumbItem(nombre, ruta) {
     return li;
 }
 
-// Crear elemento de Carpeta
-function crearElementoCarpeta(carpeta) {
-    const div = document.createElement('div');
-    div.className = 'column is-one-third has-text-centered carpeta';
-    div.dataset.ruta = carpeta.path;
-
-    div.innerHTML = `
-        <i class="fas fa-folder fa-3x has-text-warning mb-2"></i>
-        <div>${carpeta.name}</div>
-    `;
-
-    return div;
-}
-
-// Crear elemento de Archivo
-function crearElementoArchivo(archivo) {
-    const div = document.createElement('div');
-    div.className = 'column is-one-third-desktop is-two-fifths-mobile has-text-centered archivo';
-
-    div.innerHTML = `
-        <i class="fas fa-file fa-3x has-text-secondary mb-2"></i>
-        <div>${archivo.name}</div>
-        <button class="button is-small is-info boton-ver" data-ruta="${archivo.path}" data-tipo="${archivo.type}">Ver</button>
-        <button class="button is-small is-danger boton-eliminar" data-nombre="${archivo.name}" data-ruta="${archivo.path}">Eliminar</button>
-        <button class="button is-small is-warning boton-renombrar" data-ruta="${archivo.path}">Renombrar</button>
-        <button class="button is-small is-primary boton-mover" data-ruta="${archivo.path}">Mover</button>
-    `;
-
-    return div;
-}
