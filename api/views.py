@@ -25,31 +25,30 @@ def listar_archivos(request):
     contenido = []
     media_url = settings.MEDIA_URL.strip("/")
 
-    for root, dirs, files in os.walk(media_path):
-        contenido.extend(
-            [
+    for root, dirs, files in os.walk(media_path, followlinks=True):
+        for d in dirs:
+            full_path = os.path.join(root, d)
+            relative_path = os.path.relpath(full_path, media_path).replace("\\", "/")
+            contenido.append(
                 {
                     "type": "folder",
                     "name": d,
-                    "path": os.path.join(
-                        media_url, os.path.relpath(os.path.join(root, d), media_path)
-                    ).replace("\\", "/"),
+                    "path": f"{media_url}/{relative_path}",
                 }
-                for d in dirs
-            ]
-        )
-        contenido.extend(
-            [
+            )
+
+        for f in files:
+            full_path = os.path.join(root, f)
+            relative_path = os.path.relpath(full_path, media_path).replace("\\", "/")
+            contenido.append(
                 {
                     "type": "file",
                     "name": f,
-                    "path": os.path.join(
-                        media_url, os.path.relpath(os.path.join(root, f), media_path)
-                    ).replace("\\", "/"),
+                    "path": f"{media_url}/{relative_path}",
                 }
-                for f in files
-            ]
-        )
+            )
+
+    contenido.sort(key=lambda x: (x["type"] != "folder", x["name"].lower()))
     return JsonResponse({"contenido": contenido})
 
 
