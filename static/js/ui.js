@@ -133,6 +133,31 @@ function construirJerarquia(contenido) {
     return arbol;
 }
 
+function getIconoSegunExtension(nombreArchivo) {
+    const extension = nombreArchivo.split('.').pop().toLowerCase();
+    const iconos = {
+        'fa-file-image': ['png', 'jpg', 'jpeg', 'gif', 'bmp'],
+        'fa-file-archive': ['zip', 'rar', '7z', 'tar', 'gz'],
+        'fa-file-video': ['mp4', 'webm', 'ogg', 'mkv'],
+        'fa-file-audio': ['mp3', 'wav', 'ogg'],
+        'fa-file-pdf': ['pdf'],
+        'fa-file-alt': ['txt', 'log', 'csv'],
+        'fa-file-word': ['doc', 'docx'],
+        'fa-file-excel': ['xls', 'xlsx'],
+        'fa-file-powerpoint': ['ppt', 'pptx'],
+        'fa-file-code': ['html', 'css', 'js', 'json', 'xml'],
+        'fa-key': ['pem', 'ppk', 'key', 'keyx'],
+    };
+
+    for (const [icono, extensiones] of Object.entries(iconos)) {
+        if (extensiones.includes(extension)) {
+            return icono;
+        }
+    }
+
+    return 'fa-file';
+}
+
 
 function renderizarArbol(arbol, contenedor) {
     const ul = document.createElement('ul');
