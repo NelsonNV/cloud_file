@@ -9,7 +9,6 @@ export function inicializarUI() {
     const btnSubirArchivo = document.getElementById('btnSubirArchivo');
     const btnCrearCarpeta = document.getElementById('btnCrearCarpeta');
 
-    // Delegar eventos en el contenedor principal
     contenedor.addEventListener('click', async (event) => {
         const target = event.target;
 
@@ -51,7 +50,6 @@ export function inicializarUI() {
         }
     });
 
-    // Delegar eventos en el breadcrumb
     breadcrumb.addEventListener('click', (event) => {
         if (event.target.tagName === 'A' && event.target.dataset.ruta) {
             rutaActual = event.target.dataset.ruta;
@@ -59,7 +57,6 @@ export function inicializarUI() {
         }
     });
 
-    // Crear carpeta
     btnCrearCarpeta.addEventListener('click', async () => {
         const nombreCarpeta = prompt('Introduce el nombre de la nueva carpeta:');
         if (!nombreCarpeta) {
@@ -69,7 +66,6 @@ export function inicializarUI() {
         if (await crearCarpeta(nombreCarpeta, rutaActual)) renderContenido();
     });
 
-    // Subir archivo
     btnSubirArchivo.addEventListener('click', async () => {
         const archivoInput = document.createElement('input');
         archivoInput.type = 'file';
@@ -93,11 +89,9 @@ export async function renderContenido() {
     const breadcrumb = document.getElementById('breadcrumb');
     const datos = await listarArchivos(rutaActual);
 
-    // Limpiar contenido previo
     contenedor.innerHTML = '';
     breadcrumb.innerHTML = '';
 
-    // Actualizar Breadcrumb
     const rutas = rutaActual.split('/').filter((parte) => parte);
     let rutaParcial = '';
     breadcrumb.appendChild(crearBreadcrumbItem('Inicio', ''));
@@ -106,7 +100,6 @@ export async function renderContenido() {
         breadcrumb.appendChild(crearBreadcrumbItem(parte, rutaParcial));
     });
 
-    // Renderizar estructura jerárquica
     const arbol = construirJerarquia(datos);
     renderizarArbol(arbol, contenedor);
 }
@@ -115,7 +108,7 @@ function construirJerarquia(contenido) {
     const arbol = {};
 
     contenido.forEach((item) => {
-        const rutaRelativa = item.path.replace(/^media\//, ''); // Eliminar prefijo 'media/'
+        const rutaRelativa = item.path.replace(/^media\//, '');
         const partes = rutaRelativa.split('/');
 
         let nodoActual = arbol;
@@ -187,8 +180,9 @@ function renderizarArbol(arbol, contenedor) {
             renderizarArbol(item, subLista);
 
             carpetaDiv.addEventListener('click', (event) => {
-                event.stopPropagation(); // Evitar que el evento burbujee a niveles superiores
+                event.stopPropagation();
                 const isCollapsed = subLista.style.maxHeight === '0px';
+
                 if (isCollapsed) {
                     subLista.style.maxHeight = 'fit-content';
                     subLista.style.opacity = '1';
