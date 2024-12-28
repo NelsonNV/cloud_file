@@ -2,6 +2,7 @@ import { listarArchivos, eliminarElemento, renombrarElemento, moverElemento, sub
 import { mostrarArchivo } from './viewer.js';
 
 let rutaActual = '';
+const estadoCarpetas = new Set(); // Guardar las rutas abiertas
 
 export function inicializarUI() {
     const contenedor = document.getElementById('contenedor');
@@ -28,27 +29,28 @@ export function inicializarUI() {
             const ruta = target.dataset.ruta;
             const nombreActual = target.dataset.nombre;
             const nuevoNombre = prompt('Introduce el nuevo nombre:', nombreActual);
-          if (nuevoNombre && nuevoNombre !== nombreActual) {
-             if (await renombrarElemento(ruta, nuevoNombre)); renderContenido();
-          }
+            if (nuevoNombre && await renombrarElemento(ruta, nuevoNombre)) renderContenido();
         }
 
         if (target.classList.contains('boton-mover')) {
             const ruta = target.dataset.ruta;
             const nuevaRuta = prompt('Introduce la nueva ruta de destino:');
-            if (nuevaRuta && await moverElemento(ruta, nuevaRuta)); renderContenido();
+            if (nuevaRuta && await moverElemento(ruta, nuevaRuta)) renderContenido();
         }
 
         if (target.classList.contains('carpeta-expandible')) {
             const subLista = target.nextElementSibling;
             const isCollapsed = subLista.style.maxHeight === '0px';
             if (isCollapsed) {
-                subLista.style.maxHeight = `${subLista.scrollHeight}px`;
+                subLista.style.maxHeight = 'fit-content';
+                subLista.style.opacity = '1';
                 target.querySelector('.icono').classList.replace('fa-folder', 'fa-folder-open');
-                ajustarAlturaPadre(target);
+                estadoCarpetas.add(target.dataset.ruta);
             } else {
                 subLista.style.maxHeight = '0';
+                subLista.style.opacity = '0';
                 target.querySelector('.icono').classList.replace('fa-folder-open', 'fa-folder');
+                estadoCarpetas.delete(target.dataset.ruta);
             }
         }
     });
@@ -92,6 +94,8 @@ export async function renderContenido() {
     const breadcrumb = document.getElementById('breadcrumb');
     const datos = await listarArchivos(rutaActual);
 
+    guardarEstadoCarpetas(contenedor);
+
     contenedor.innerHTML = '';
     breadcrumb.innerHTML = '';
 
@@ -105,6 +109,8 @@ export async function renderContenido() {
 
     const arbol = construirJerarquia(datos);
     renderizarArbol(arbol, contenedor);
+
+    restaurarEstadoCarpetas(contenedor);
 }
 
 function construirJerarquia(contenido) {
@@ -163,11 +169,12 @@ function renderizarArbol(arbol, contenedor) {
     Object.keys(arbol).forEach((clave) => {
         const item = arbol[clave];
         const li = document.createElement('li');
-        li.classList.add('mb-3'); // Añadir margen entre elementos
+        li.classList.add('mb-3');
 
         if (item.type === 'folder') {
             const carpetaDiv = document.createElement('div');
             carpetaDiv.className = 'carpeta-expandible';
+            carpetaDiv.setAttribute('data-ruta', item.path);
             carpetaDiv.innerHTML = `
                 <div class="carpeta-header">
                     <i class="fas fa-folder icono"></i>
@@ -176,7 +183,7 @@ function renderizarArbol(arbol, contenedor) {
             `;
 
             const subLista = document.createElement('ul');
-            subLista.style.maxHeight = '0'; // Inicia colapsada
+            subLista.style.maxHeight = '0';
             subLista.style.overflow = 'hidden';
             subLista.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
 
@@ -190,13 +197,13 @@ function renderizarArbol(arbol, contenedor) {
                     subLista.style.maxHeight = 'fit-content';
                     subLista.style.opacity = '1';
                     carpetaDiv.querySelector('.icono').classList.replace('fa-folder', 'fa-folder-open');
+                    estadoCarpetas.add(carpetaDiv.dataset.ruta);
                 } else {
                     subLista.style.maxHeight = '0';
                     subLista.style.opacity = '0';
                     carpetaDiv.querySelector('.icono').classList.replace('fa-folder-open', 'fa-folder');
+                    estadoCarpetas.delete(carpetaDiv.dataset.ruta);
                 }
-
-                actualizarAlturasPadres(carpetaDiv);
             });
 
             li.appendChild(carpetaDiv);
@@ -225,19 +232,29 @@ function renderizarArbol(arbol, contenedor) {
     contenedor.appendChild(ul);
 }
 
-/**
- * Ajustar dinámicamente las alturas de los padres para evitar solapamientos.
- * @param {HTMLElement} elemento El contenedor que contiene la sublista.
- */
-function actualizarAlturasPadres(elemento) {
-    let nodoPadre = elemento.parentElement;
-    while (nodoPadre && nodoPadre.tagName === 'li') {
-        const subLista = nodoPadre.querySelector('ul');
-        if (subLista) {
-            subLista.style.maxHeight = 'fit-content';
+function guardarEstadoCarpetas(contenedor) {
+    const carpetasAbiertas = contenedor.querySelectorAll('.carpeta-expandible');
+    estadoCarpetas.clear();
+    carpetasAbiertas.forEach((carpeta) => {
+        const subLista = carpeta.nextElementSibling;
+        if (subLista && subLista.style.maxHeight !== '0px') {
+            estadoCarpetas.add(carpeta.dataset.ruta);
         }
-        nodoPadre = nodoPadre.parentElement.closest('li');
-    }
+    });
+}
+
+function restaurarEstadoCarpetas(contenedor) {
+    const carpetasAbiertas = contenedor.querySelectorAll('.carpeta-expandible');
+    carpetasAbiertas.forEach((carpeta) => {
+        const subLista = carpeta.nextElementSibling;
+        if (estadoCarpetas.has(carpeta.dataset.ruta)) {
+            subLista.style.maxHeight = 'fit-content';
+            carpeta.querySelector('.icono').classList.replace('fa-folder', 'fa-folder-open');
+        } else {
+            subLista.style.maxHeight = '0';
+            carpeta.querySelector('.icono').classList.replace('fa-folder-open', 'fa-folder');
+        }
+    });
 }
 
 function crearBreadcrumbItem(nombre, ruta) {
