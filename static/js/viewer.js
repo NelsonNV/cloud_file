@@ -76,22 +76,24 @@ export async function obtenerVistaContenido(ruta) {
 
 export async function mostrarArchivo(ruta) {
     const modal = document.createElement('div');
-    modal.className = 'modal is-active ';
+    modal.className = 'custom-modal';
 
     const contenido = await obtenerVistaContenido(ruta);
 
     modal.innerHTML = `
-        <div class="modal-background"></div>
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title">Visor de archivo</p>
-                <button class="delete" aria-label="close"></button>
+        <div class="custom-modal-background"></div>
+        <div class="custom-modal-card">
+            <header class="custom-modal-header">
+                <p class="custom-modal-title">Visor de archivo</p>
+                <button class="custom-modal-close" aria-label="close">&times;</button>
             </header>
-            <section class="modal-card-body">
-                ${contenido}
+            <section class="custom-modal-body">
+                <div class="custom-modal-content">
+                    ${contenido}
+                </div>
             </section>
-            <footer class="modal-card-foot">
-                <button class="button is-danger is-light" aria-label="close">Cerrar</button>
+            <footer class="custom-modal-footer">
+                <button class="custom-modal-button" aria-label="close">Cerrar</button>
             </footer>
         </div>
     `;
@@ -102,6 +104,7 @@ export async function mostrarArchivo(ruta) {
     cerrarBotones.forEach((boton) =>
         boton.addEventListener('click', () => cerrarModal(modal))
     );
+    modal.querySelector('.custom-modal-background').addEventListener('click', () => cerrarModal(modal));
 }
 function cerrarModal(modal) {
     document.body.removeChild(modal);
