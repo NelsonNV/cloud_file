@@ -2,91 +2,100 @@
     list-style-type: none;
     padding-left: 1rem;
     margin: 0;
+    position: relative;
 }
 
 .tree li {
-    margin: 0.5rem 0;
-    display: flex;
-    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    position: relative;
 }
 
-.tree li span {
-    width: 100%; /* El elemento ocupa todo el ancho disponible */
-    overflow: hidden; /* Ocultar contenido desbordado */
-    white-space: nowrap; /* No dividir líneas */
-    text-overflow: ellipsis; /* Agregar "..." al texto largo */
+.tree li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -0.5rem;
+    width: 1rem;
+    height: 100%;
+    border-left: 1px solid #ccc; /* Línea vertical */
+}
+
+.tree li:last-child::before {
+    height: calc(50%); /* Termina la línea al último hijo */
+}
+
+.tree li::after {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    left: -0.5rem;
+    width: 1rem;
+    height: 1px;
+    border-top: 1px solid #ccc; /* Línea horizontal */
+}
+
+.tree > ul > li::before {
+    display: none; /* Ocultar la línea vertical del primer nivel */
+}
+
+.tree .carpeta-expandible::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    left: -0.5rem;
+    width: 1rem;
+    height: 1px;
+    border-top: 1px solid #ccc; /* Línea horizontal para carpetas */
 }
 
 .tree .archivo {
     display: flex;
-    flex-direction: column; /* Elementos apilados verticalmente */
-    padding: 0.5rem;
-    border-bottom: 1px solid #ddd; /* Separador entre archivos */
-    gap: 0.5rem; /* Espacio entre texto y botones */
+    flex-direction: column;
+    padding-left: 1rem; /* Alinear con las líneas */
+}
+
+.tree .archivo::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -0.5rem;
+    width: 1rem;
+    height: calc(50%); /* Línea vertical solo hasta la mitad del elemento */
+    border-left: 1px solid #ccc;
+}
+
+.tree .archivo:last-child::before {
+    height: 0; /* Sin línea adicional para el último elemento */
 }
 
 .tree .archivo .icono {
-    font-size: 1.5rem; /* Tamaño del ícono */
-    margin-bottom: 0.5rem; /* Espacio debajo del ícono */
-    flex-shrink: 0;
-}
-
-.tree .archivo span {
-    overflow: hidden; /* Ocultar texto desbordado */
-    text-overflow: ellipsis; /* Agregar "..." */
-    white-space: nowrap; /* Evitar saltos de línea */
-    display: block;
-    max-width: 100%; /* Limitar el ancho */
+    margin-right: 0.5rem;
 }
 
 .tree .archivo .botones {
     display: flex;
-    gap: 0.5rem; /* Espacio entre botones */
-    flex-wrap: wrap; /* Permitir que los botones se reubiquen si no hay espacio */
-    justify-content: flex-start; /* Alinear los botones a la izquierda */
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
-.tree .archivo .botones button {
-    font-size: 0.875rem; /* Ajustar tamaño del texto del botón */
-    padding: 0.5rem 0.75rem;
-    white-space: nowrap; /* Evitar que el texto del botón se divida */
-}
-
-.tree .carpeta-expandible {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    transition: background-color 0.2s ease; /* Efecto hover */
-}
-
-.tree .carpeta-expandible:hover {
-    background-color: #f5f5f5; /* Color de fondo al pasar el ratón */
-}
-
-.tree .icono {
-    margin-right: 0.5rem; /* Espaciado entre el ícono y el texto */
-    transition: transform 0.3s ease; /* Suavizar íconos */
-}
-
+/* Líneas de conexión en subniveles */
 ul.tree ul {
-    transition: max-height 0.3s ease, opacity 0.3s ease; /* Suavizar transiciones */
+    margin-left: 1rem;
+    padding-left: 0;
+    position: relative;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
 /* Responsivo: Ajustar en pantallas pequeñas */
 @media screen and (max-width: 768px) {
     .tree .archivo {
-        align-items: flex-start; /* Alinear contenido a la izquierda */
+        align-items: flex-start;
     }
 
     .tree .archivo .botones {
-        width: 100%; /* Ocupa todo el ancho disponible */
-        justify-content: flex-start; /* Botones alineados a la izquierda */
-    }
-
-    .tree li span {
-        max-width: 75%; /* Truncar texto más agresivamente */
+        width: 100%;
+        justify-content: flex-start;
     }
 }
-
-
