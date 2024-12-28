@@ -43,6 +43,7 @@ export function inicializarUI() {
             if (isCollapsed) {
                 subLista.style.maxHeight = `${subLista.scrollHeight}px`;
                 target.querySelector('.icono').classList.replace('fa-folder', 'fa-folder-open');
+                ajustarAlturaPadre(target);
             } else {
                 subLista.style.maxHeight = '0';
                 target.querySelector('.icono').classList.replace('fa-folder-open', 'fa-folder');
@@ -181,7 +182,7 @@ function renderizarArbol(arbol, contenedor) {
             const subLista = document.createElement('ul');
             subLista.style.maxHeight = '0'; // Inicia colapsada
             subLista.style.overflow = 'hidden';
-            subLista.style.transition = 'max-height 0.3s ease';
+            subLista.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
 
             renderizarArbol(item, subLista);
 
@@ -189,21 +190,26 @@ function renderizarArbol(arbol, contenedor) {
                 event.stopPropagation(); // Evitar que el evento burbujee a niveles superiores
                 const isCollapsed = subLista.style.maxHeight === '0px';
                 if (isCollapsed) {
-                    subLista.style.maxHeight = `${subLista.scrollHeight}px`;
+                    subLista.style.maxHeight = 'fit-content';
+                    subLista.style.opacity = '1';
                     carpetaDiv.querySelector('.icono').classList.replace('fa-folder', 'fa-folder-open');
                 } else {
                     subLista.style.maxHeight = '0';
+                    subLista.style.opacity = '0';
                     carpetaDiv.querySelector('.icono').classList.replace('fa-folder-open', 'fa-folder');
                 }
+
+                actualizarAlturasPadres(carpetaDiv);
             });
 
             li.appendChild(carpetaDiv);
             li.appendChild(subLista);
         } else if (item.type === 'file') {
+            const icono = getIconoSegunExtension(item.name);
             li.innerHTML = `
                 <div class="archivo">
                     <div class="archivo-header">
-                        <i class="fas fa-file icono"></i>
+                        <i class="fas ${icono} icono"></i>
                         <span class="truncate-text">${item.name}</span>
                     </div>
                     <div class="botones">
@@ -222,17 +228,28 @@ function renderizarArbol(arbol, contenedor) {
     contenedor.appendChild(ul);
 }
 
+/**
+ * Ajustar dinámicamente las alturas de los padres para evitar solapamientos.
+ * @param {HTMLElement} elemento El contenedor que contiene la sublista.
+ */
+function actualizarAlturasPadres(elemento) {
+    let nodoPadre = elemento.parentElement;
+    while (nodoPadre && nodoPadre.tagName === 'li') {
+        const subLista = nodoPadre.querySelector('ul');
+        if (subLista) {
+            subLista.style.maxHeight = 'fit-content';
+        }
+        nodoPadre = nodoPadre.parentElement.closest('li');
+    }
+}
+
 function crearBreadcrumbItem(nombre, ruta) {
     const li = document.createElement('li');
-    li.className = 'breadcrumb-item';
-
+    li.classList.add('breadcrumb-item');
     const link = document.createElement('a');
-    link.className = 'is-link';
     link.textContent = nombre;
     link.dataset.ruta = ruta;
     link.href = '#';
     li.appendChild(link);
-
     return li;
 }
-
