@@ -97,7 +97,7 @@ export function inicializarUI() {
 export async function renderContenido() {
     const contenedor = document.getElementById('contenedor');
     const breadcrumb = document.getElementById('breadcrumb');
-    const datos = await listarArchivos(rutaActual);
+    const arbol = await listarArchivos(rutaActual);
 
     guardarEstadoCarpetas(contenedor);
 
@@ -112,8 +112,7 @@ export async function renderContenido() {
         breadcrumb.appendChild(crearBreadcrumbItem(parte, rutaParcial));
     });
 
-    const arbol = construirJerarquia(datos);
-    renderizarArbol(arbol, contenedor);
+    renderizarArbolLazy(arbol, contenedor);
 
     restaurarEstadoCarpetas(contenedor);
 }
@@ -167,7 +166,7 @@ function getIconoSegunExtension(nombreArchivo) {
 }
 
 
-function renderizarArbol(arbol, contenedor) {
+async function renderizarArbolLazy(arbol, contenedor) {
     const ul = document.createElement('ul');
     ul.classList.add('tree');
 
@@ -192,13 +191,14 @@ function renderizarArbol(arbol, contenedor) {
             subLista.style.overflow = 'hidden';
             subLista.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
 
-            renderizarArbol(item, subLista);
-
-            carpetaDiv.addEventListener('click', (event) => {
+            carpetaDiv.addEventListener('click', async (event) => {
                 event.stopPropagation();
                 const isCollapsed = subLista.style.maxHeight === '0px';
 
                 if (isCollapsed) {
+                    if (subLista.children.length === 0) {
+                        renderizarArbolLazy(item, subLista);
+                    }
                     subLista.style.maxHeight = 'fit-content';
                     subLista.style.opacity = '1';
                     carpetaDiv.querySelector('.icono').classList.replace('fa-folder', 'fa-folder-open');
