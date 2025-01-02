@@ -19,37 +19,89 @@ def registrar_cambio(accion, detalle):
     logging.info(f"{accion}: {detalle}")
 
 
-# Listar archivos y carpetas
+import unicodedata
+
+
 def listar_archivos(request):
     media_path = settings.MEDIA_ROOT
-    contenido = []
     media_url = settings.MEDIA_URL.strip("/")
+    arbol = {}
 
-    for root, dirs, files in os.walk(media_path, followlinks=True):
-        for d in dirs:
-            full_path = os.path.join(root, d)
-            relative_path = os.path.relpath(full_path, media_path).replace("\\", "/")
-            contenido.append(
-                {
-                    "type": "folder",
-                    "name": d,
-                    "path": f"{media_url}/{relative_path}",
-                }
+    def sanitize_name(name):
+        """Sanitiza los nombres eliminando caracteres no seguros o normalizando."""
+        try:
+            sanitized = (
+                unicodedata.normalize("NFKD", name)
+                .encode("ascii", "ignore")
+                .decode("ascii")
             )
+            return sanitized.replace("'", "").replace('"', "").strip()
+        except Exception:
+            return name  # Retorna el nombre original si falla
 
-        for f in files:
-            full_path = os.path.join(root, f)
-            relative_path = os.path.relpath(full_path, media_path).replace("\\", "/")
-            contenido.append(
-                {
-                    "type": "file",
-                    "name": f,
-                    "path": f"{media_url}/{relative_path}",
-                }
-            )
+    def insertar_en_arbol(path_parts, item, nodo_actual):
+        """Inserta un elemento en el árbol de jerarquía."""
+        for index, parte in enumerate(path_parts):
+            es_ultimo = index == len(path_parts) - 1
+            if parte not in nodo_actual:
+                nodo_actual[parte] = item if es_ultimo else {}
+            nodo_actual = nodo_actual[parte]
 
-    contenido.sort(key=lambda x: (x["type"] != "folder", x["name"].lower()))
-    return JsonResponse({"contenido": contenido})
+    try:
+        for root, dirs, files in os.walk(media_path, followlinks=True):
+            for d in dirs:
+                try:
+                    full_path = os.path.join(root, d)
+                    relative_path = os.path.relpath(full_path, media_path).replace(
+                        "\\", "/"
+                    )
+                    path_parts = relative_path.split("/")
+                    item = {
+                        "type": "folder",
+                        "name": sanitize_name(d),
+                        "path": f"{media_url}/{relative_path}",
+                    }
+                    insertar_en_arbol(path_parts, item, arbol)
+                except Exception as e:
+                    insertar_en_arbol(
+                        ["errores"],
+                        {
+                            "type": "error",
+                            "name": f"Error en carpeta: {d}",
+                            "message": str(e),
+                        },
+                        arbol,
+                    )
+
+            for f in files:
+                try:
+                    full_path = os.path.join(root, f)
+                    relative_path = os.path.relpath(full_path, media_path).replace(
+                        "\\", "/"
+                    )
+                    path_parts = relative_path.split("/")
+                    item = {
+                        "type": "file",
+                        "name": sanitize_name(f),
+                        "path": f"{media_url}/{relative_path}",
+                    }
+                    insertar_en_arbol(path_parts, item, arbol)
+                except Exception as e:
+                    insertar_en_arbol(
+                        ["errores"],
+                        {
+                            "type": "error",
+                            "name": f"Error en archivo: {f}",
+                            "message": str(e),
+                        },
+                        arbol,
+                    )
+
+    except Exception as e:
+        # Si ocurre un error general, agrega a la raíz del árbol
+        arbol["error_general"] = {"type": "error", "message": str(e)}
+
+    return JsonResponse(arbol)
 
 
 # Crear una nueva carpeta

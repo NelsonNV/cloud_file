@@ -11,7 +11,7 @@ export async function listarArchivos(ruta = '') {
     try {
         const response = await fetch(`${urls.listar}?ruta=${encodeURIComponent(ruta)}`);
         const data = await response.json();
-        return data.contenido || [];
+        return data || [];
     } catch (error) {
         console.error('Error al listar archivos:', error);
         return [];
